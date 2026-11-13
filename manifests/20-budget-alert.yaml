@@ -1,0 +1,65 @@
+# B7 budget alerts for team "collections" (MaaSSubscription aigov-collections).
+# Covers aigov-collections and aigov-collections-budget (per subscription).
+# Budget (demo shape) = 20,000 tokens per 1h, enforced as a hard cut-off (429) by the MaaS token limit.
+# Alerts: TeamBudget80 at >=80%, TeamBudget100 at >=100%. Metric = Limitador authorized_hits (tokens), scraped by
+# user-workload monitoring from kuadrant-system, so the rule lives in kuadrant-system (UWM rules see same-namespace series).
+# Routing: user-defined alert routing (cluster-monitoring-config enableUserAlertmanagerConfig: true) -> webhook receiver.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aigov-budget
+  namespace: kuadrant-system
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+spec:
+  groups:
+    - name: aigov-budget
+      interval: 30s
+      rules:
+        - record: aigov:budget_used_ratio:1h
+          # Exact delta (counter now - counter 1h ago); increase() extrapolates and overstates young series.
+          # "or (... * 0)" treats a series that did not exist 1h ago as starting from 0.
+          expr: |
+            (
+              sum by (subscription, cost_center) (authorized_hits{subscription=~"aigov-collections(-budget.*)?"})
+              - (
+                  sum by (subscription, cost_center) (authorized_hits{subscription=~"aigov-collections(-budget.*)?"} offset 1h)
+                  or sum by (subscription, cost_center) (authorized_hits{subscription=~"aigov-collections(-budget.*)?"}) * 0
+                )
+            ) / 20000
+        - alert: TeamBudget80
+          expr: aigov:budget_used_ratio:1h >= 0.8
+          for: 0m
+          labels: {severity: warning, team: collections, aigov_demo: "true"}
+          annotations:
+            summary: "Team {{ $labels.subscription }} has used {{ $value | humanizePercentage }} of its token budget"
+            description: "Budget 20,000 tokens / 1h (IDR 5,000 at 0.25/token). Requests will be cut off at 100%."
+        - alert: TeamBudget100
+          expr: aigov:budget_used_ratio:1h >= 1
+          for: 0m
+          labels: {severity: critical, team: collections, aigov_demo: "true"}
+          annotations:
+            summary: "Team {{ $labels.subscription }} has exhausted its token budget ({{ $value | humanizePercentage }})"
+            description: "MaaS now rejects this team's requests with HTTP 429 until the window resets."
+---
+apiVersion: monitoring.coreos.com/v1beta1
+kind: AlertmanagerConfig
+metadata:
+  name: aigov-budget
+  namespace: kuadrant-system
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+spec:
+  route:
+    receiver: aigov-budget-webhook
+    groupBy: [alertname, subscription]
+    groupWait: 10s
+    groupInterval: 30s
+    repeatInterval: 15m
+    matchers:
+      - name: aigov_demo
+        value: "true"
+        matchType: "="
+  receivers:
+    - name: aigov-budget-webhook
+      webhookConfigs:
+        - url: http://aigov-alert-receiver.${DEMO_NS}.svc.cluster.local:8080/alerts
+          sendResolved: true

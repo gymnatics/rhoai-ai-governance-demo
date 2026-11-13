@@ -1,0 +1,51 @@
+# F1 audit trail RBAC (MLflow workspace = project ${DEMO_NS}; RHOAI 3.5 "Working with MLflow" 2.2/2.3).
+#  - app SA aigov-app writes audit traces: mlflow-operator-mlflow-integration (data-plane create/update, no delete)
+#  - auditors (group aigov-auditor) read only: mlflow-operator-mlflow-view ONLY. Not the standard "view" role:
+#    view includes pods/log, and auditors only need the masked audit records in MLflow.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aigov-app-mlflow-integration
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: mlflow-operator-mlflow-integration}
+subjects:
+  - {kind: ServiceAccount, name: aigov-app, namespace: ${DEMO_NS}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aigov-auditors-mlflow-view
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: mlflow-operator-mlflow-view}
+subjects:
+  - {kind: Group, name: aigov-auditor, apiGroup: rbac.authorization.k8s.io}
+---
+# Lets the dashboard list project ${DEMO_NS} for auditors (so the embedded MLflow UI can open the workspace).
+# Grants only "get" on this project object: no pods, logs, secrets or config.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: aigov-auditor-project-visible
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+rules:
+  - apiGroups: [""]
+    resources: [namespaces]
+    resourceNames: [${DEMO_NS}]
+    verbs: [get]
+  - apiGroups: [project.openshift.io]
+    resources: [projects]
+    resourceNames: [${DEMO_NS}]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aigov-auditor-project-visible
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: aigov-auditor-project-visible}
+subjects:
+  - {kind: Group, name: aigov-auditor, apiGroup: rbac.authorization.k8s.io}

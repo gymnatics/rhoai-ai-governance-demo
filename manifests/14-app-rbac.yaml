@@ -1,0 +1,28 @@
+# kube-rbac-proxy on the NeMo route authorises "get services/aigov-guardrails-service" in ${DEMO_NS}.
+# The guardrail route's auth proxy checks "get services" in the namespace. Grant exactly that, in ${DEMO_NS} only
+# (read-only, one namespace).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: aigov-guardrails-caller
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+rules:
+  - apiGroups: [""]
+    resources: [services]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aigov-guardrails-caller
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: aigov-guardrails-caller
+subjects:
+  - kind: ServiceAccount
+    name: aigov-app
+    namespace: ${DEMO_NS}

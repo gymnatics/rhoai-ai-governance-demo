@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${DEMO_NS}
+  labels:
+    opendatahub.io/dashboard: "true"
+    app.kubernetes.io/part-of: ${PART_OF}
+  annotations:
+    openshift.io/display-name: "AI governance demo (guardrails, audit)"
+---
+# Apps call NeMo with this SA's token (kube-rbac-proxy auth on the guardrails route).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aigov-app
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}

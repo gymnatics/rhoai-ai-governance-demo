@@ -1,0 +1,38 @@
+# Identities used by the demo workbench aigov-workbench.
+#  - aigov-app token (long-lived SA token Secret): calls the NeMo route + writes MLflow audit traces
+#  - aigov-finops: read-only metrics (cluster-monitoring-view) for the B6 chargeback / B7 budget notebooks
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aigov-app-token
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+  annotations:
+    kubernetes.io/service-account.name: aigov-app
+type: kubernetes.io/service-account-token
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aigov-finops
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aigov-finops-token
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+  annotations:
+    kubernetes.io/service-account.name: aigov-finops
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: aigov-finops-monitoring-view
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: cluster-monitoring-view}
+subjects:
+  - {kind: ServiceAccount, name: aigov-finops, namespace: ${DEMO_NS}}

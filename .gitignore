@@ -1,0 +1,13 @@
+# credentials and per-cluster state (created by scripts/setup.sh) - never commit
+.secrets/
+.state/
+config/demo.env
+RUN-THROUGH.local.html
+# generated outputs
+recordings/out/
+recordings/node_modules/
+reports/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store

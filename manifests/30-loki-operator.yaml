@@ -1,0 +1,29 @@
+# Loki Operator (Red Hat, redhat-operators, stable-6.6) for the MaaS Loki-based showback/audit pipeline
+# (RHOAI 3.5 Technology Preview: "Loki-based showback and user-scoped dashboards for Models-as-a-Service").
+# Cluster-wide operator on a shared cluster: approved by the PoC owner 2026-11-11 ("if not installed, then do it").
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-operators-redhat
+  labels:
+    openshift.io/cluster-monitoring: "true"
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-operators-redhat
+  namespace: openshift-operators-redhat
+spec:
+  upgradeStrategy: Default
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: loki-operator
+  namespace: openshift-operators-redhat
+spec:
+  channel: stable-6.6
+  name: loki-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

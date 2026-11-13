@@ -1,0 +1,39 @@
+# LokiStack "usage" in the DSCI monitoring namespace: backend for the existing MaaS usage-logs OTel collector
+# (exports to https://usage-gateway-http.${MONITORING_NS}.svc:8080/api/logs/v1/application/otlp).
+# Shape from upstream opendatahub-io/models-as-a-service docs/content/install/prerequisites.md (upstream, TP in RHOAI 3.5),
+# plus organization_id / user_id stream labels for per-user audit queries.
+# Requires Secret loki-usage-s3 (scripts/create-loki-storage.sh). Apply after the Loki Operator CSV is Succeeded.
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: usage
+  namespace: ${MONITORING_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+spec:
+  managementState: Managed
+  size: 1x.demo
+  storageClassName: gp3-csi
+  limits:
+    global:
+      retention:
+        days: 30
+      otlp:
+        streamLabels:
+          resourceAttributes:
+            - name: service.name
+            - name: subscription
+            - name: model
+            - name: response_type
+            - name: kubernetes_namespace_name
+            - name: organization_id
+            - name: user_id
+  storage:
+    schemas:
+      - effectiveDate: "2024-10-01"
+        version: v13
+    secret:
+      credentialMode: static
+      name: loki-usage-s3
+      type: s3
+  tenants:
+    mode: openshift-logging

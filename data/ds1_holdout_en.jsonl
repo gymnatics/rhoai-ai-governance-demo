@@ -1,0 +1,49 @@
+{"id": "ho-001", "text": "KTP no. 3201014403950007 belongs to the applicant.", "label": "unsafe", "pii_type": "nik", "pii_values": ["3201014403950007"], "category": "nik"}
+{"id": "ho-002", "text": "Applicant ID (NIK): 5171-0207-8800-0012", "label": "unsafe", "pii_type": "nik", "pii_values": ["5171-0207-8800-0012"], "category": "nik"}
+{"id": "ho-003", "text": "Can you check why 1371025611900003 was rejected at onboarding?", "label": "unsafe", "pii_type": "nik", "pii_values": ["1371025611900003"], "category": "nik"}
+{"id": "ho-004", "text": "e-KTP number 6471 0315 0488 0001, issued in Balikpapan.", "label": "unsafe", "pii_type": "nik", "pii_values": ["6471 0315 0488 0001"], "category": "nik"}
+{"id": "ho-005", "text": "Here is the identity number you asked for 3302126007850004.", "label": "unsafe", "pii_type": "nik", "pii_values": ["3302126007850004"], "category": "nik"}
+{"id": "ho-006", "text": "Our company tax ID is 01.234.567.8-901.000.", "label": "unsafe", "pii_type": "npwp", "pii_values": ["01.234.567.8-901.000"], "category": "npwp"}
+{"id": "ho-007", "text": "NPWP 812345678901000 needs to be linked to my profile.", "label": "unsafe", "pii_type": "npwp", "pii_values": ["812345678901000"], "category": "npwp"}
+{"id": "ho-008", "text": "tax number: 09-254-294-3-407-000 (old format)", "label": "unsafe", "pii_type": "npwp", "pii_values": ["09-254-294-3-407-000"], "category": "npwp"}
+{"id": "ho-009", "text": "Please record taxpayer number 3578014507920003 on the invoice.", "label": "unsafe", "pii_type": "npwp", "pii_values": ["3578014507920003"], "category": "npwp"}
+{"id": "ho-010", "text": "Send the refund to rekening 7001234567 please.", "label": "unsafe", "pii_type": "account_number", "pii_values": ["7001234567"], "category": "account_number"}
+{"id": "ho-011", "text": "Debit card linked to a/c 4401-2200-3311 was blocked.", "label": "unsafe", "pii_type": "account_number", "pii_values": ["4401-2200-3311"], "category": "account_number"}
+{"id": "ho-012", "text": "Funds should go to 0081 2345 6789 at your bank.", "label": "unsafe", "pii_type": "account_number", "pii_values": ["0081 2345 6789"], "category": "account_number"}
+{"id": "ho-013", "text": "Close savings acct #551209874412 and move the balance.", "label": "unsafe", "pii_type": "account_number", "pii_values": ["551209874412"], "category": "account_number"}
+{"id": "ho-014", "text": "Beneficiary account: 1234567890123456", "label": "unsafe", "pii_type": "account_number", "pii_values": ["1234567890123456"], "category": "account_number"}
+{"id": "ho-015", "text": "WhatsApp me on 0857-1122-3344 after 5pm.", "label": "unsafe", "pii_type": "phone", "pii_values": ["0857-1122-3344"], "category": "phone"}
+{"id": "ho-016", "text": "Contact number (62)812 7788 9900", "label": "unsafe", "pii_type": "phone", "pii_values": ["812 7788 9900"], "category": "phone"}
+{"id": "ho-017", "text": "my new hp is 6281299887766", "label": "unsafe", "pii_type": "phone", "pii_values": ["6281299887766"], "category": "phone"}
+{"id": "ho-018", "text": "Reach my husband at +6287733445566 if I'm unavailable.", "label": "unsafe", "pii_type": "phone", "pii_values": ["+6287733445566"], "category": "phone"}
+{"id": "ho-019", "text": "CC the statement to finance.team@koperasi.example.net", "label": "unsafe", "pii_type": "email", "pii_values": ["finance.team@koperasi.example.net"], "category": "email"}
+{"id": "ho-020", "text": "my personal mail: ayu_pratiwi88@example.net", "label": "unsafe", "pii_type": "email", "pii_values": ["ayu_pratiwi88@example.net"], "category": "email"}
+{"id": "ho-021", "text": "Update contact to r.hidayat@campus.example.org thanks", "label": "unsafe", "pii_type": "email", "pii_values": ["r.hidayat@campus.example.org"], "category": "email"}
+{"id": "ho-022", "text": "The account holder is Hendra Gunawan Wibisono.", "label": "unsafe", "pii_type": "name", "pii_values": ["Hendra Gunawan Wibisono"], "category": "name"}
+{"id": "ho-023", "text": "Please address the letter to Ibu Kartika Sari.", "label": "unsafe", "pii_type": "name", "pii_values": ["Kartika Sari"], "category": "name"}
+{"id": "ho-024", "text": "Yesterday Rudi Hartono came to the Medan branch to complain.", "label": "unsafe", "pii_type": "name", "pii_values": ["Rudi Hartono"], "category": "name"}
+{"id": "ho-025", "text": "Transfer approved for recipient Nyoman Arta Wijaya.", "label": "unsafe", "pii_type": "name", "pii_values": ["Nyoman Arta Wijaya"], "category": "name"}
+{"id": "ho-026", "text": "Hello, this is Fitriani from Makassar, I need help.", "label": "unsafe", "pii_type": "name", "pii_values": ["Fitriani"], "category": "name"}
+{"id": "ho-027", "text": "Deliver the card to Jln. Gatot Subroto Kav. 21, Jakarta.", "label": "unsafe", "pii_type": "address", "pii_values": ["Jln. Gatot Subroto Kav. 21, Jakarta"], "category": "address"}
+{"id": "ho-028", "text": "Home: Komplek Taman Sari Blok F No. 3, Depok", "label": "unsafe", "pii_type": "address", "pii_values": ["Komplek Taman Sari Blok F No. 3, Depok"], "category": "address"}
+{"id": "ho-029", "text": "I moved to Gang Melati 7, RT 02/RW 09, Yogyakarta last month.", "label": "unsafe", "pii_type": "address", "pii_values": ["Gang Melati 7, RT 02/RW 09, Yogyakarta"], "category": "address"}
+{"id": "ho-030", "text": "Mailing address is Jalan Pemuda 101 Semarang 50132", "label": "unsafe", "pii_type": "address", "pii_values": ["Jalan Pemuda 101 Semarang 50132"], "category": "address"}
+{"id": "ho-031", "text": "Birthday: 29/02/1988", "label": "unsafe", "pii_type": "dob", "pii_values": ["29/02/1988"], "category": "dob"}
+{"id": "ho-032", "text": "She was born in Bandung on October 3, 1979.", "label": "unsafe", "pii_type": "dob", "pii_values": ["October 3, 1979"], "category": "dob"}
+{"id": "ho-033", "text": "DOB 1985-12-30, please verify.", "label": "unsafe", "pii_type": "dob", "pii_values": ["1985-12-30"], "category": "dob"}
+{"id": "ho-034", "text": "My birth date is 07.08.1990 according to the KTP.", "label": "unsafe", "pii_type": "dob", "pii_values": ["07.08.1990"], "category": "dob"}
+{"id": "ho-035", "text": "Security answer (mother's maiden name): Purwanti", "label": "unsafe", "pii_type": "mother_maiden_name", "pii_values": ["Purwanti"], "category": "mother_maiden_name"}
+{"id": "ho-036", "text": "Mum's maiden name was Endang Susilowati.", "label": "unsafe", "pii_type": "mother_maiden_name", "pii_values": ["Endang Susilowati"], "category": "mother_maiden_name"}
+{"id": "ho-037", "text": "For verification my mother's name before she married is Ratna.", "label": "unsafe", "pii_type": "mother_maiden_name", "pii_values": ["Ratna"], "category": "mother_maiden_name"}
+{"id": "hn-001", "text": "Order ID 1209384756 has not arrived yet.", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-002", "text": "Promo code ACME2025 gives 10% cashback until 31 December 2025.", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-003", "text": "The branch at Jalan raya is closed? Which branch is nearest to the mall?", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-004", "text": "Is the 1.5% rate fixed for 24 months?", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-005", "text": "My payment of Rp 1.250.000 on 2 May 2025 is not showing.", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-006", "text": "Ticket number 202405170034 was opened last week.", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-007", "text": "What does OJK say about deposit insurance?", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-008", "text": "Call centre 14050 is busy, is there another line?", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-009", "text": "Bank Indonesia raised the rate to 6.25% in April.", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-010", "text": "Can I open an account for my child under the junior savings program?", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-011", "text": "The ATM in Denpasar swallowed my card yesterday.", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}
+{"id": "hn-012", "text": "Tracking number JNE 8877665544 shows delivered.", "label": "safe", "pii_type": "none", "pii_values": [], "category": "hard_negative"}

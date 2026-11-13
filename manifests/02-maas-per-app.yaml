@@ -1,0 +1,77 @@
+# Per-application MaaS governance (B4 access control, B5 quotas, B6 chargeback, B7 budget cut-off).
+#   aigov-chatbot     -> aigov-qwen3-8b only; 100k tokens/1m normally (scripts/b5-set-limit.sh lowers it live for B5)
+#   aigov-idocr       -> aigov-qwen3-8b + aigov-small
+#   aigov-collections -> aigov-qwen3-8b; demo budget 20,000 tokens / 1h (production shape: e.g. 40,000 / 720h)
+#                        extra fresh budgets for repeat B7 runs: scripts/b7-new-budget.sh <suffix>
+#   aigov-marketing   -> aigov-qwen3-8b; 200k/1m (third team for the B6 chargeback run)
+#   aigov-unauthorised-> no MaaSAuthPolicy / subscription: cannot obtain a key, every call is rejected
+# billingRate.perToken exists in the RHOAI 3.5 CRD but is not documented; chargeback is computed from token metrics
+# x a price table in notebooks/b6_chargeback.py (illustrative price 0.25 per token).
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata: {name: aigov-chatbot, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  modelRefs: [{name: aigov-qwen3-8b, namespace: ${MODEL_NS}}]
+  subjects: {groups: [{name: aigov-chatbot}]}
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata: {name: aigov-idocr, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  modelRefs: [{name: aigov-qwen3-8b, namespace: ${MODEL_NS}}, {name: aigov-small, namespace: ${MODEL_NS}}]
+  subjects: {groups: [{name: aigov-idocr}]}
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata: {name: aigov-collections, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  modelRefs: [{name: aigov-qwen3-8b, namespace: ${MODEL_NS}}]
+  subjects: {groups: [{name: aigov-collections}]}
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata: {name: aigov-marketing, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  modelRefs: [{name: aigov-qwen3-8b, namespace: ${MODEL_NS}}]
+  subjects: {groups: [{name: aigov-marketing}]}
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata: {name: aigov-chatbot, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  owner: {groups: [{name: aigov-chatbot}]}
+  priority: 20
+  tokenMetadata: {costCenter: cc-digital-chatbot, organizationId: acme, labels: {app: chatbot}}
+  modelRefs:
+    - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 100000, window: 1m}]}
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata: {name: aigov-idocr, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  owner: {groups: [{name: aigov-idocr}]}
+  priority: 20
+  tokenMetadata: {costCenter: cc-ops-idocr, organizationId: acme, labels: {app: id-ocr}}
+  modelRefs:
+    - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 200000, window: 1m}]}
+    - {name: aigov-small, namespace: ${MODEL_NS}, billingRate: {perToken: "0.05"}, tokenRateLimits: [{limit: 200000, window: 1m}]}
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata: {name: aigov-collections, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  owner: {groups: [{name: aigov-collections}]}
+  priority: 20
+  tokenMetadata: {costCenter: cc-collections, organizationId: acme, labels: {app: collections}}
+  modelRefs:
+    - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 20000, window: 1h}]}
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata: {name: aigov-marketing, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/part-of: ${PART_OF}}}
+spec:
+  owner: {groups: [{name: aigov-marketing}]}
+  priority: 20
+  tokenMetadata: {costCenter: cc-marketing, organizationId: acme, labels: {app: marketing}}
+  modelRefs:
+    - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 200000, window: 1m}]}

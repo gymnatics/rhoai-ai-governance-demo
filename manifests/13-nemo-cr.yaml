@@ -1,0 +1,38 @@
+# NeMo Guardrails server for the AI governance demo (TrustyAI operator, NeMo Guardrails = GA in RHOAI 3.5 on x86_64).
+# enable-auth is set at creation so the guardrail route is protected from the start.
+# Secret aigov-nemo-maas-keys is created by scripts/create-nemo-secrets.sh (values never stored in git/manifests).
+apiVersion: trustyai.opendatahub.io/v1alpha1
+kind: NemoGuardrails
+metadata:
+  name: aigov-guardrails
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+  annotations:
+    security.opendatahub.io/enable-auth: "true"
+spec:
+  replicas: 1
+  nemoConfigs:
+    - name: policy-chatbot
+      configMaps: [aigov-cfg-chatbot]
+      default: true
+    - name: policy-idocr
+      configMaps: [aigov-cfg-idocr]
+    - name: policy-pii-detect
+      configMaps: [aigov-cfg-pii-detect]
+    - name: policy-pii-log
+      configMaps: [aigov-cfg-pii-log]
+    - name: policy-injection
+      configMaps: [aigov-cfg-injection]
+  env:
+    - name: CHATBOT_MAAS_KEY
+      valueFrom: {secretKeyRef: {name: aigov-nemo-maas-keys, key: chatbot}}
+    - name: IDOCR_MAAS_KEY
+      valueFrom: {secretKeyRef: {name: aigov-nemo-maas-keys, key: idocr}}
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: http://data-science-collector-collector.${MONITORING_NS}.svc.cluster.local:4317
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: grpc
+    - name: OTEL_SERVICE_NAME
+      value: aigov-guardrails
+    - name: OTEL_METRICS_EXPORTER
+      value: none

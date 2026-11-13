@@ -1,0 +1,177 @@
+# Per-app / per-purpose NeMo Guardrails configs. Each is mounted with aigov-nemo-common (actions.py, rails.co, prompts.yml).
+# Select per request with {"guardrails": {"config_id": "<name>"}}; policy-chatbot is the default.
+#
+#  policy-chatbot    : MASK all Indonesian identifiers + names (Presidio PERSON via custom action, acronym stoplist) + email, block prompt injection, block PII leaks in output  (C1, C4, C6, D1)
+#  policy-idocr      : same, but NIK ALLOWED (ID-card OCR app may process national IDs)                                              (C7 preview)
+#  policy-pii-detect : BLOCK on any PII (no masking), used for C2 recall scoring and as the C7 "block" action
+#  policy-pii-log    : LOG ONLY (structured event, request continues), C7 "log" action
+#  policy-injection  : self check input only, isolates D1 scoring
+#
+# Main model = Qwen3-8B via MaaS (OpenAI-compatible), each config uses its app's own sk-oai key from Secret aigov-nemo-maas-keys,
+# so MaaS quotas and chargeback stay per application.
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: aigov-cfg-chatbot
+      namespace: ${DEMO_NS}
+      labels: {app.kubernetes.io/part-of: ${PART_OF}}
+    data:
+      config.yaml: |
+        models:
+          - type: main
+            engine: openai
+            model: ${MODEL_ID}
+            api_key_env_var: CHATBOT_MAAS_KEY
+            parameters:
+              base_url: ${MAAS_URL}/v1
+              temperature: 0.2
+              max_tokens: 512
+        instructions:
+          - type: general
+            content: |
+              You are the Acme Bank customer assistant. Answer banking questions helpfully and concisely.
+              Placeholders such as [NIK], [PHONE], [EMAIL], [ADDRESS] or [MASKED] replace customer data that was removed for privacy; never ask the customer to repeat it.
+        tracing:
+          enabled: true
+          span_format: opentelemetry
+          enable_content_capture: true
+          adapters:
+            - name: OpenTelemetry
+        rails:
+          config:
+            sensitive_data_detection:
+              input:
+                entities: [PERSON, EMAIL_ADDRESS]
+              output:
+                entities: [PERSON, EMAIL_ADDRESS]
+          input:
+            flows:
+              - mask indonesian identifiers on input
+              - self check input
+          output:
+            flows:
+              - detect indonesian identifiers on output
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: aigov-cfg-idocr
+      namespace: ${DEMO_NS}
+      labels: {app.kubernetes.io/part-of: ${PART_OF}}
+    data:
+      config.yaml: |
+        models:
+          - type: main
+            engine: openai
+            model: ${MODEL_ID}
+            api_key_env_var: IDOCR_MAAS_KEY
+            parameters:
+              base_url: ${MAAS_URL}/v1
+              temperature: 0.0
+              max_tokens: 512
+        instructions:
+          - type: general
+            content: |
+              You are the Acme Bank ID-card OCR post-processing assistant. You may process national ID numbers (NIK) to validate and format KTP data.
+        tracing:
+          enabled: true
+          span_format: opentelemetry
+          enable_content_capture: true
+          adapters:
+            - name: OpenTelemetry
+        rails:
+          config:
+            sensitive_data_detection:
+              input:
+                entities: [EMAIL_ADDRESS]
+              output:
+                entities: [EMAIL_ADDRESS]
+          input:
+            flows:
+              - mask indonesian identifiers except nik on input
+              - self check input
+          output:
+            flows:
+              - detect indonesian identifiers except nik on output
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: aigov-cfg-pii-detect
+      namespace: ${DEMO_NS}
+      labels: {app.kubernetes.io/part-of: ${PART_OF}}
+    data:
+      config.yaml: |
+        models:
+          - type: main
+            engine: openai
+            model: ${MODEL_ID}
+            api_key_env_var: CHATBOT_MAAS_KEY
+            parameters:
+              base_url: ${MAAS_URL}/v1
+        tracing:
+          enabled: true
+          span_format: opentelemetry
+          enable_content_capture: true
+          adapters:
+            - name: OpenTelemetry
+        rails:
+          config:
+            sensitive_data_detection:
+              input:
+                entities: [PERSON, EMAIL_ADDRESS]
+          input:
+            flows:
+              - detect indonesian identifiers on input
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: aigov-cfg-pii-log
+      namespace: ${DEMO_NS}
+      labels: {app.kubernetes.io/part-of: ${PART_OF}}
+    data:
+      config.yaml: |
+        models:
+          - type: main
+            engine: openai
+            model: ${MODEL_ID}
+            api_key_env_var: CHATBOT_MAAS_KEY
+            parameters:
+              base_url: ${MAAS_URL}/v1
+        tracing:
+          enabled: true
+          span_format: opentelemetry
+          enable_content_capture: true
+          adapters:
+            - name: OpenTelemetry
+        rails:
+          input:
+            flows:
+              - log indonesian identifiers on input
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: aigov-cfg-injection
+      namespace: ${DEMO_NS}
+      labels: {app.kubernetes.io/part-of: ${PART_OF}}
+    data:
+      config.yaml: |
+        models:
+          - type: main
+            engine: openai
+            model: ${MODEL_ID}
+            api_key_env_var: CHATBOT_MAAS_KEY
+            parameters:
+              base_url: ${MAAS_URL}/v1
+              temperature: 0.0
+        tracing:
+          enabled: true
+          span_format: opentelemetry
+          enable_content_capture: true
+          adapters:
+            - name: OpenTelemetry
+        rails:
+          input:
+            flows:
+              - self check input
