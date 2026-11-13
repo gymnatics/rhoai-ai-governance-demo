@@ -1,0 +1,87 @@
+# Bank assistant (Chainlit sample app) for the AI governance demo: built in-cluster, runs as the existing app
+# ServiceAccount aigov-app (already allowed to call the guardrail route and write MLflow audit traces).
+# Secret aigov-assistant-env is created by scripts/deploy-assistant.sh (values never stored in git).
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: aigov-assistant
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-assistant}
+spec:
+  lookupPolicy: {local: true}
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: aigov-assistant
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-assistant}
+spec:
+  source: {type: Binary}
+  strategy:
+    type: Docker
+    dockerStrategy: {dockerfilePath: Containerfile}
+  output:
+    to: {kind: ImageStreamTag, name: "aigov-assistant:latest"}
+  resources:
+    limits: {cpu: "2", memory: 4Gi}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aigov-assistant
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-assistant}
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"aigov-assistant:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"assistant\")].image"}]'
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: aigov-assistant}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: aigov-assistant, app.kubernetes.io/part-of: ${PART_OF}}
+    spec:
+      serviceAccountName: aigov-app
+      containers:
+        - name: assistant
+          image: aigov-assistant:latest
+          ports: [{containerPort: 8000, name: http}]
+          envFrom: [{secretRef: {name: aigov-assistant-env}}]
+          env:
+            - {name: BRAND, value: "${BRAND}"}
+          readinessProbe:
+            httpGet: {path: /, port: http}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 100m, memory: 512Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aigov-assistant
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-assistant}
+spec:
+  selector: {app.kubernetes.io/name: aigov-assistant}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: aigov-assistant
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-assistant}
+  annotations:
+    haproxy.router.openshift.io/timeout: 120s
+spec:
+  to: {kind: Service, name: aigov-assistant}
+  port: {targetPort: http}
+  tls: {termination: edge, insecureEdgeTerminationPolicy: Redirect}

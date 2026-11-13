@@ -53,6 +53,14 @@ Teardown (asks for confirmation; restores telemetry, dashboard flags, gateway la
 scripts/teardown.sh            # --keep-users to keep the Keycloak users, --purge-local to delete .secrets/
 ```
 
+## Bank assistant (sample app)
+
+`app/` is a small Chainlit chat app that shows the guardrails the way an end user sees them: masking before the model (C4), prompt-injection refusal (D1), a different policy per application (C7: customer chatbot, ID-card OCR, strict), the output check (C6) and the audit record id for each request (F1). Every message calls `notebooks/audit_client.py`, so it uses the same guardrail configs and writes the same masked MLflow traces as the notebooks. It's demo code built on the platform APIs, not a product feature.
+
+```bash
+scripts/deploy-assistant.sh      # builds in-cluster and deploys; prints the URL (user demo, password in .secrets/assistant.env)
+```
+
 ## Repo layout
 
 | Path | Contents |
@@ -62,6 +70,7 @@ scripts/teardown.sh            # --keep-users to keep the Keycloak users, --purg
 | `notebooks/` | Evaluation harness + 9 demo notebooks (C2, C4, C6, C7, D1, B5, B6, B7, F1) |
 | `data/` | Synthetic datasets (PII, prompt injection, masking usefulness) and their generators. All values are synthetic |
 | `docs/` | `RUN-THROUGH.html` (interactive run sheet), `DEMO-RUN-WORKFLOW.md`, `RUNBOOK.md` (results, J7 tier table), `C1-create-guardrail.md` |
+| `app/` | Bank assistant sample app (Chainlit): `app.py`, `Containerfile`; deployed by `scripts/deploy-assistant.sh` with `manifests/40-assistant.yaml` |
 | `recordings/` | Playwright scripts that record 1080p fallback videos with captions, stopwatch and fast-forward (`recordings/run.sh <script>.mjs`) |
 
 Generated and never committed: `.secrets/` (passwords, API keys, per-user kubeconfigs), `.state/` (original values for teardown), `reports/`, `recordings/out/`, `RUN-THROUGH.local.html`.
@@ -75,6 +84,7 @@ recordings/run.sh a1-deploy-from-catalog.mjs   # run scripts/a1-reset.sh first
 recordings/run.sh b1-b4-self-service-access.mjs
 recordings/run.sh c1-create-guardrail.mjs      # project aigov-c1-live must not exist
 recordings/run.sh f1-audit-trail.mjs           # after notebooks/F1-audit-trail.ipynb has written traces
+APP_URL=<assistant URL> ASSISTANT_PASSWORD=... recordings/run.sh app-bank-assistant.mjs
 recordings/run.sh b6-chargeback.mjs           # after notebooks/B6-chargeback.ipynb; B6_START="YYYY-MM-DD hh:mm:ss" sets the dashboard range
 scripts/b7-new-budget.sh rec1 && eval "$(scripts/env.sh)" \
   && B7_SUBSCRIPTION=aigov-collections-budget-rec1 KEY_COLLECTIONS=$APP_COLLECTIONS_BUDGET_REC1_KEY recordings/run.sh b7-budget-alert.mjs

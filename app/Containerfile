@@ -1,0 +1,14 @@
+# Bank assistant (Chainlit) for the AI governance demo. Build context: a staging dir with app/* plus
+# notebooks/harness.py and notebooks/audit_client.py copied in (see scripts/deploy-assistant.sh).
+FROM registry.access.redhat.com/ubi9/python-312:latest
+WORKDIR /opt/app-root/src/app
+COPY --chown=1001:0 requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=1001:0 . .
+# OpenShift runs with a random UID in group 0: Chainlit writes .chainlit/ and .files/ here
+USER 0
+RUN chgrp -R 0 /opt/app-root/src && chmod -R g=u /opt/app-root/src
+USER 1001
+ENV HOME=/opt/app-root/src PYTHONUNBUFFERED=1
+EXPOSE 8000
+CMD ["chainlit", "run", "app.py", "--host", "0.0.0.0", "--port", "8000", "--headless"]

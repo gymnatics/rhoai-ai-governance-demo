@@ -121,6 +121,11 @@ A1 starts first because the model takes about 3.5 minutes to come up. B1/B4 fill
 - **Paste tip:** if the console editor auto-indents the paste into a mess, use the file drag-and-drop on the Import YAML page instead (save the template as `c1.yaml` beforehand).
 - **Fallback:** YAML error / pod not Running in **2 min** → `C1-create-guardrail.mp4`.
 
+### 7b · Bank assistant app (optional, before the C notebooks)
+- **Live (~5 min):** the sample Chainlit app. Customer chatbot → "Mask my NIK and phone" (model receives `[NIK]`/`[PHONE]`, decision `masked`) → injection prompt (`blocked_input`) → profile **ID-card OCR** → "Validate a KTP" (NIK kept for the model, answer blocked by the output check: `blocked_output`) → profile **Strict** → PII message refused, normal question answered. Point at an audit record id for F1.
+- **Say:** "A sample app on the platform APIs, not a product screen. Same guardrail service, a policy per application; every request leaves a masked audit record."
+- **Fallback:** `recordings/out/APP-bank-assistant.mp4`.
+
 ### 8 · C4 + C7: Masking before the model; per-app policies
 - **Live:** `C4-masking.ipynb` first cell (what the model receives: `[NIK]`, `[PHONE]`, …) → the 30-sample run (optional, ~2 min) → `C7-policies-per-app.ipynb`: chatbot masks NIK, id-ocr keeps NIK; block / mask / log-only on one server, no redeploy.
 - **Numbers:** 41/41 PII values masked; 28/30 answers useful; 0 answers repeat PII.
