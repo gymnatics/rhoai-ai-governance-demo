@@ -106,6 +106,7 @@ oc describe nodes -l nvidia.com/gpu.present=true | grep -A4 "Allocated resources
     <tr><td><b>aigov-app-unauth</b></td><td><a href="${DASH_URL}/maas/keys-and-subs/subscriptions" target="_blank">Gen AI studio → API keys → Subscriptions</a></td></tr>
     <tr><td><b>aigov-auditor1</b></td><td><a href="${DASH_URL}/develop-train/mlflow/experiments?workspace=ai-governance-demo" target="_blank">Develop &amp; train → Experiments (ai-governance-demo)</a>. Open it once now: the embedded MLflow is slow the first time</td></tr>
     <tr><td><b>assistant</b></td><td>Bank assistant: the URL printed by <code>scripts/deploy-assistant.sh</code> (user <code>demo</code>, password in <code>.secrets/assistant.env</code>), logged in</td></tr>
+    <tr><td><b>audit portal</b></td><td>AI audit portal: the URL printed by <code>scripts/deploy-audit-portal.sh</code> (user <code>auditor</code>, password in <code>.secrets/audit-portal.env</code>)</td></tr>
     <tr><td><b>workbench</b></td><td>The JupyterLab tab from T-60, notebooks open and cleared</td></tr>
     <tr><td><b>terminal</b></td><td>One terminal with the environment loaded, large font (Cmd/Ctrl + several times) so the back row can read it</td></tr>
   </table>
@@ -325,18 +326,23 @@ policy-pii-log    log   -> allowed = True (event written to the guardrail log, w
   <div class="fb"><b>Fallback:</b> guardrail or workbench not responding within 30 s → <code>reports/executed-notebooks/D1-prompt-injection.executed.ipynb</code> (same table, misses and refusal).</div>
 </section>
 
-<section data-grp="Live demo · ~60 min" data-title="12 · F1 audit trail" id="s-f1" data-min="4">
-  <h2>12 · F1 End-to-end audit trail <span class="tag m">MANDATORY</span><span class="tag ga">GA parts</span><span class="tag tp">Loki TP</span></h2>
-  <p class="meta muted">Workbench (optional), then profile <b>aigov-auditor1</b> · 4 min · measures: every call traceable; auditor can read, not change; no raw PII stored</p>
+<section data-grp="Live demo · ~60 min" data-title="12 · F1 audit trail" id="s-f1" data-min="6">
+  <h2>12 · F1 End-to-end audit trail <span class="tag m">MANDATORY</span><span class="tag ga">GA parts</span><span class="tag tp">sample portal</span></h2>
+  <p class="meta muted">Audit portal, then profile <b>aigov-auditor1</b>, then the terminal · 6 min · measures: every call traceable; auditor can read, not change; no raw PII stored; evidence exportable</p>
   <ul class="check">
-    <li><input type="checkbox"><span><b>(Optional) Fresh traces.</b> Workbench → <code>F1-audit-trail.ipynb</code> → run all cells. The third code cell prints one line per demo call: request id, decision (masked / blocked_input / allowed), PII types, and the masked text. Skip this if traces from earlier runs are enough.</span></li>
-    <li><input type="checkbox"><span><b>Open the trail as the auditor.</b> Switch to the <b>aigov-auditor1</b> profile (Develop &amp; train → Experiments, workspace ai-governance-demo). Click the experiment <b>aigov-audit</b> → <b>Traces</b> tab. Point at: prompts with <code>[NIK]</code>, <code>[PHONE]</code> instead of the values, and <code>&lt;blocked before model&gt;</code> for blocked requests.</span></li>
-    <li><input type="checkbox"><span><b>Open one trace.</b> Click the trace whose request starts with "Validate KTP data". In its details, find <b>Tags</b> and click <b>+12</b> to expand them: request_id, end_user, app, api_key_name, subscription, model_id, model_uri, guardrail_decision, rails_triggered, pii_types. Say: "who, which app, which key, which model and version, and what the guardrail decided".</span></li>
-    <li><input type="checkbox"><span><b>Read-only.</b> Try to change something: go back to Experiments and click <b>Create experiment</b> (or try to edit a tag). <b>Expect:</b> permission denied. The auditor also has no access to pods or logs.</span></li>
+    <li><input type="checkbox"><span><b>Set the context.</b> Say: "Auditors usually don't log into the ML platform. They use an audit portal or their SIEM. MLflow on OpenShift AI is the system of record; this portal is a sample read-only view on top of it, and the same records also stream to a SIEM."</span></li>
+    <li><input type="checkbox"><span><b>Audit portal.</b> Open the audit portal (URL printed by <code>scripts/deploy-audit-portal.sh</code>) and sign in (user <code>auditor</code>; password in the Logins table). <b>Overview:</b> point at the request count, the decisions per application (masked, blocked before the model, answer blocked) and the personal-data types found.</span></li>
+    <li><input type="checkbox"><span><b>Find one request.</b> Tab <b>Search &amp; detail</b>. Type the first 8 characters of an <b>Audit record</b> id from the bank assistant (step 7b), or filter Application = <code>id-card-ocr</code>. <b>Open request</b> shows the record: what the model received (masked), the answer, and the audit fields (end user, app, API key, subscription, model and version, decision, rails, PII types).</span></li>
+    <li><input type="checkbox"><span><b>Export evidence.</b> Tab <b>Export evidence</b> → <b>Excel</b> (or CSV / JSON). Say: "The filtered records, stamped with who exported them and when, each with a link back to MLflow. Values are already masked."</span></li>
+    <li><input type="checkbox"><span><b>Drill down to MLflow.</b> Back on the record, click <b>Open this trace in MLflow ↗</b>. In the new tab sign in as <b>aigov-auditor1</b> if asked (the read-only auditor). <b>Expect:</b> the same trace: masked input, response, and the tags (click <b>+N</b> next to Tags).</span></li>
+    <li><input type="checkbox"><span><b>The SIEM copy.</b> In the terminal, with the id's first 8 characters:<pre>oc logs -n ai-governance-demo deploy/aigov-audit-otel-collector | grep -A40 &lt;first-8-chars-of-id&gt; | grep -E "request_id|audit\.|spanInputs"</pre><b>Expect:</b> <code>request_id</code>, <code>audit.app</code>, <code>audit.end_user</code>, <code>audit.subscription</code>, <code>audit.guardrail_decision</code>, <code>audit.pii_types</code>, and the masked prompt. Say: "The application sends every audit trace to MLflow and, over OpenTelemetry, to a collector. Here it prints what it receives; in production its exporter points at Splunk or Elastic."</span></li>
+    <li><input type="checkbox"><span><b>Read-only (optional).</b> As aigov-auditor1 in MLflow, try <b>Create experiment</b>: denied. The portal itself runs with the MLflow <i>view</i> role only.</span></li>
   </ul>
-  <div class="say"><b>Say:</b> "No raw PII stored, even for the app allowed to process NIK. The auditor has MLflow read-only access and nothing else. Per-request gateway records are also kept 30 days in Loki, which is Technology Preview."</div>
-  <div class="fb"><b>Fallback if</b> the traces don't load within <b>30 s</b>:
-    <details><summary>F1-audit-trail.mp4</summary><video controls preload="none" src="recordings/out/F1-audit-trail.mp4"></video></details></div>
+  <div class="say"><b>Say:</b> "Every AI request is traceable: who, which app, key, subscription and model version, and what the guardrail decided, with no raw personal data stored anywhere: not in MLflow, not in the portal export, not in the SIEM copy."</div>
+  <div class="note"><b>Tiers:</b> MLflow tracing is GA (x86_64); the Red Hat build of OpenTelemetry is GA; the audit portal is sample code on the MLflow API, not a product screen. Per-request gateway records are also kept in Loki (Technology Preview).</div>
+  <div class="fb"><b>Fallback if</b> the portal or MLflow doesn't load within <b>30 s</b>:
+    <details><summary>F1-audit-portal.mp4 · portal, export, MLflow, SIEM copy</summary><video controls preload="none" src="recordings/out/F1-audit-portal.mp4"></video></details>
+    <details><summary>F1-audit-trail.mp4 · MLflow as the auditor + read-only checks</summary><video controls preload="none" src="recordings/out/F1-audit-trail.mp4"></video></details></div>
 </section>
 
 <section data-grp="Live demo · ~60 min" data-title="13 · J7 maturity" id="s-j7" data-min="4">
@@ -374,6 +380,7 @@ oc delete project aigov-c1-live --ignore-not-found</pre>The first line matters m
   <details><summary>B7 · budget alerts</summary><video controls preload="none" src="recordings/out/B7-budget-alert.mp4"></video></details>
   <details><summary>C1 · create guardrail</summary><video controls preload="none" src="recordings/out/C1-create-guardrail.mp4"></video></details>
   <details><summary>Bank assistant · guardrails as a user sees them</summary><video controls preload="none" src="recordings/out/APP-bank-assistant.mp4"></video></details>
+  <details><summary>F1 · audit portal, MLflow, SIEM copy</summary><video controls preload="none" src="recordings/out/F1-audit-portal.mp4"></video></details>
   <details><summary>F1 · audit trail</summary><video controls preload="none" src="recordings/out/F1-audit-trail.mp4"></video></details>
 </section>
 

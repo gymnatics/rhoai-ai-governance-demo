@@ -1,0 +1,116 @@
+# AI audit portal (Streamlit sample app): read-only view of the MLflow audit trail for auditors.
+# Runs as its own ServiceAccount with ONLY the MLflow view role in ${DEMO_NS} (cannot write, delete or read pods/logs).
+# Secret aigov-audit-portal-env (login, MLflow URL, dashboard URL) is created by scripts/deploy-audit-portal.sh.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aigov-audit-portal
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-audit-portal}
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: aigov-audit-portal-token
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+  annotations: {kubernetes.io/service-account.name: aigov-audit-portal}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: aigov-audit-portal-mlflow-view
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: mlflow-operator-mlflow-view}
+subjects:
+  - {kind: ServiceAccount, name: aigov-audit-portal, namespace: ${DEMO_NS}}
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: aigov-audit-portal
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-audit-portal}
+spec:
+  lookupPolicy: {local: true}
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: aigov-audit-portal
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-audit-portal}
+spec:
+  source: {type: Binary}
+  strategy:
+    type: Docker
+    dockerStrategy: {dockerfilePath: Containerfile}
+  output:
+    to: {kind: ImageStreamTag, name: "aigov-audit-portal:latest"}
+  resources:
+    limits: {cpu: "2", memory: 4Gi}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aigov-audit-portal
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-audit-portal}
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"aigov-audit-portal:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"portal\")].image"}]'
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: aigov-audit-portal}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: aigov-audit-portal, app.kubernetes.io/part-of: ${PART_OF}}
+    spec:
+      serviceAccountName: aigov-audit-portal
+      automountServiceAccountToken: false
+      containers:
+        - name: portal
+          image: aigov-audit-portal:latest
+          ports: [{containerPort: 8501, name: http}]
+          envFrom: [{secretRef: {name: aigov-audit-portal-env}}]
+          env:
+            - {name: BRAND, value: "${BRAND}"}
+            - {name: MLFLOW_WORKSPACE, value: "${DEMO_NS}"}
+            - {name: AUDIT_EXPERIMENT, value: aigov-audit}
+            - name: MLFLOW_TRACKING_TOKEN
+              valueFrom: {secretKeyRef: {name: aigov-audit-portal-token, key: token}}
+          readinessProbe:
+            httpGet: {path: /_stcore/health, port: http}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 100m, memory: 512Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aigov-audit-portal
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-audit-portal}
+spec:
+  selector: {app.kubernetes.io/name: aigov-audit-portal}
+  ports: [{name: http, port: 8501, targetPort: http}]
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: aigov-audit-portal
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}, app.kubernetes.io/name: aigov-audit-portal}
+spec:
+  to: {kind: Service, name: aigov-audit-portal}
+  port: {targetPort: http}
+  tls: {termination: edge, insecureEdgeTerminationPolicy: Redirect}

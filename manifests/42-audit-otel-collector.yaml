@@ -1,0 +1,30 @@
+# OpenTelemetry Collector (Red Hat build of OpenTelemetry) that receives a copy of every audit trace over OTLP.
+# Stands in for the bank's SIEM: here it prints what it receives (debug exporter); in production replace the exporter
+# with the SIEM's (e.g. splunk_hec, elasticsearch, otlphttp). The bank assistant exports to it with MLflow dual export
+# (MLFLOW_TRACE_ENABLE_OTLP_DUAL_EXPORT=true + OTEL_EXPORTER_OTLP_TRACES_ENDPOINT), so MLflow still gets every trace.
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: aigov-audit-otel
+  namespace: ${DEMO_NS}
+  labels: {app.kubernetes.io/part-of: ${PART_OF}}
+spec:
+  mode: deployment
+  replicas: 1
+  config:
+    receivers:
+      otlp:
+        protocols:
+          http: {endpoint: 0.0.0.0:4318}
+          grpc: {endpoint: 0.0.0.0:4317}
+    processors:
+      batch: {}
+    exporters:
+      debug:
+        verbosity: detailed
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug]

@@ -50,6 +50,11 @@ spec:
           envFrom: [{secretRef: {name: aigov-assistant-env}}]
           env:
             - {name: BRAND, value: "${BRAND}"}
+            # MLflow dual export: every audit trace goes to MLflow AND (OTLP) to the collector that stands in for the SIEM
+            - {name: MLFLOW_TRACE_ENABLE_OTLP_DUAL_EXPORT, value: "true"}
+            - {name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, value: "http://aigov-audit-otel-collector.${DEMO_NS}.svc:4318/v1/traces"}
+            - {name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, value: http/protobuf}
+            - {name: OTEL_SERVICE_NAME, value: aigov-assistant}
           readinessProbe:
             httpGet: {path: /, port: http}
             initialDelaySeconds: 5

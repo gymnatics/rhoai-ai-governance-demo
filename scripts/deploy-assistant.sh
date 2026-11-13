@@ -29,7 +29,8 @@ oc create secret generic aigov-assistant-env -n "$DEMO_NS" \
   --dry-run=client -o yaml | oc apply -f - >/dev/null
 oc label secret aigov-assistant-env -n "$DEMO_NS" app.kubernetes.io/part-of="$PART_OF" --overwrite >/dev/null
 
-log "manifests"
+log "manifests (OpenTelemetry collector for the SIEM copy, assistant)"
+apply_manifest "$REPO_DIR/manifests/42-audit-otel-collector.yaml" >/dev/null || warn "OpenTelemetry collector not created (is the Red Hat build of OpenTelemetry installed?); MLflow audit still works"
 apply_manifest "$REPO_DIR/manifests/40-assistant.yaml" >/dev/null
 
 if $BUILD; then

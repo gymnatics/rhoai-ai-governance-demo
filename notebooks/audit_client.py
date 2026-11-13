@@ -79,7 +79,12 @@ def audited_call(prompt, end_user, config_id="policy-chatbot"):
     with mlflow.start_span(name="guarded_llm_call", span_type="LLM") as span:
         span.set_inputs({"model_received_prompt_masked": audit_text})
         span.set_outputs({"response": answer})
-        span.set_attributes({"request_id": rid, "latency_s": round(time.time() - t0, 3)})
+        # audit fields also as span attributes, so an OTLP copy (SIEM) carries them; masked values only
+        span.set_attributes({"request_id": rid, "latency_s": round(time.time() - t0, 3),
+                             "audit.end_user": end_user, "audit.app": app, "audit.config_id": config_id,
+                             "audit.api_key_name": key_name, "audit.subscription": sub, "audit.model_id": MODEL_ID,
+                             "audit.model_uri": MODEL_URI, "audit.guardrail_decision": decision,
+                             "audit.rails_triggered": ",".join(triggered) or "none", "audit.pii_types": ",".join(pii) or "none"})
         mlflow.update_current_trace(
             request_preview=audit_text[:200], response_preview=answer[:200],
             tags={

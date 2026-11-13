@@ -1,0 +1,4 @@
+streamlit>=1.40,<2
+mlflow[kubernetes]==3.14.0
+pandas
+openpyxl

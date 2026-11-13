@@ -4,11 +4,11 @@
 # user-workload monitoring with user alert routing, Keycloak (RHBK) as the OpenShift IdP, >=1 free NVIDIA GPU.
 # Every cluster-wide setting we change is recorded in .state/ so scripts/teardown.sh can restore it.
 #
-# Usage: scripts/setup.sh [--gpu-nodes N] [--with-loki] [--with-workbench] [--with-assistant] [--no-wait] [--skip-users]
+# Usage: scripts/setup.sh [--gpu-nodes N] [--with-loki] [--with-workbench] [--with-assistant] [--with-audit-portal] [--no-wait] [--skip-users]
 source "$(dirname "$0")/lib.sh"
-GPU_NODES=""; WITH_LOKI=false; WITH_WB=false; WITH_APP=false; WAIT=true; USERS=true
+GPU_NODES=""; WITH_LOKI=false; WITH_WB=false; WITH_APP=false; WITH_PORTAL=false; WAIT=true; USERS=true
 while [ $# -gt 0 ]; do case "$1" in
-  --gpu-nodes) GPU_NODES=$2; shift 2;; --with-loki) WITH_LOKI=true; shift;; --with-workbench) WITH_WB=true; shift;; --with-assistant) WITH_APP=true; shift;;
+  --gpu-nodes) GPU_NODES=$2; shift 2;; --with-loki) WITH_LOKI=true; shift;; --with-workbench) WITH_WB=true; shift;; --with-assistant) WITH_APP=true; shift;; --with-audit-portal) WITH_PORTAL=true; shift;;
   --no-wait) WAIT=false; shift;; --skip-users) USERS=false; shift;; -h|--help) sed -n '2,8p' "$0"; exit 0;;
   *) die "unknown option $1";; esac; done
 S="$STATE_DIR/setup-state.env"; touch "$S"
@@ -90,6 +90,7 @@ fi
 
 if $WITH_WB; then log "workbench"; bash "$REPO_DIR/scripts/create-workbench.sh"; fi
 if $WITH_APP; then log "bank assistant"; bash "$REPO_DIR/scripts/deploy-assistant.sh"; fi
+if $WITH_PORTAL; then log "audit portal"; bash "$REPO_DIR/scripts/deploy-audit-portal.sh"; fi
 
 bash "$REPO_DIR/scripts/a1-reset.sh"
 bash "$REPO_DIR/scripts/render-runthrough.sh"

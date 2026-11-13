@@ -149,9 +149,9 @@ A1 starts first because the model takes about 3.5 minutes to come up. B1/B4 fill
 - **Fallback:** no response within 30 s → `reports/executed-notebooks/D1-prompt-injection.executed.ipynb`.
 
 ### 12 · F1: End-to-end audit trail
-- **Live (aigov-auditor1):** Experiments → **aigov-audit** → Traces (masked requests, `<blocked before model>`) → open the id-ocr trace → **+12** tags (request_id, end_user, app, api_key_name, subscription, model_id, model_uri, guardrail_decision, rails_triggered, pii_types) → try to create or edit: denied.
-- **Say:** "No raw PII stored, even where the app may process NIK. The auditor has MLflow read only, with no access to pods or logs. Per-request gateway records are also kept 30 days in Loki (TP)."
-- **Fallback:** traces don't load in **30 s** (the embedded MLflow UI is slow on first load; pre-open it) → `F1-audit-trail.mp4`.
+- **Live (~6 min):** **audit portal** (sample, read-only on the MLflow API): Overview (decisions per app, PII types) → Search a request id from the bank assistant → masked record → **Export evidence** (Excel/CSV/JSON) → **Open this trace in MLflow** (as aigov-auditor1: same trace and tags) → terminal: the **SIEM copy** in the OpenTelemetry collector (`oc logs -n ai-governance-demo deploy/*-audit-otel-collector | grep -A40 <id>`). Optional: Create experiment as aigov-auditor1 → denied.
+- **Say:** "Auditors work from a portal or their SIEM; MLflow on OpenShift AI is the system of record. Every request is traceable, with no raw personal data in MLflow, the export or the SIEM copy. The app exports to MLflow and, over OpenTelemetry, to a collector; in production that collector points at Splunk or Elastic."
+- **Fallback:** `recordings/out/F1-audit-portal.mp4` (portal, export, MLflow, SIEM copy) or `F1-audit-trail.mp4` (MLflow + read-only checks).
 
 ### 13 · J7: Feature maturity
 - Show the J7 table in `RUNBOOK.md`. Lead with the GA features, then call out the Technology Preview and Developer Preview items.

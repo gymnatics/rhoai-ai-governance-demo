@@ -61,6 +61,16 @@ scripts/teardown.sh            # --keep-users to keep the Keycloak users, --purg
 scripts/deploy-assistant.sh      # builds in-cluster and deploys; prints the URL (user demo, password in .secrets/assistant.env)
 ```
 
+## Audit portal and SIEM copy (F1)
+
+`portal/` is a read-only Streamlit audit portal on the MLflow API: overview of guardrail decisions, search by request id, application or decision, the masked record with an **Open in MLflow** link to the exact trace, and evidence export (CSV, Excel, JSON). It runs as its own ServiceAccount with only the MLflow *view* role. Sample code, not a product feature.
+
+The bank assistant also exports every audit trace over OpenTelemetry to a collector (`manifests/42-audit-otel-collector.yaml`, Red Hat build of OpenTelemetry), using MLflow dual export (`MLFLOW_TRACE_ENABLE_OTLP_DUAL_EXPORT=true`, `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`), configured in the application, not on the MLflow server. The collector prints what it receives; in production replace its `debug` exporter with your SIEM's. Masked values only.
+
+```bash
+scripts/deploy-audit-portal.sh   # prints the URL (user auditor, password in .secrets/audit-portal.env)
+```
+
 ## Repo layout
 
 | Path | Contents |
@@ -71,6 +81,7 @@ scripts/deploy-assistant.sh      # builds in-cluster and deploys; prints the URL
 | `data/` | Synthetic datasets (PII, prompt injection, masking usefulness) and their generators. All values are synthetic |
 | `docs/` | `RUN-THROUGH.html` (interactive run sheet), `DEMO-RUN-WORKFLOW.md`, `RUNBOOK.md` (results, J7 tier table), `C1-create-guardrail.md` |
 | `app/` | Bank assistant sample app (Chainlit): `app.py`, `Containerfile`; deployed by `scripts/deploy-assistant.sh` with `manifests/40-assistant.yaml` |
+| `portal/` | AI audit portal sample app (Streamlit), deployed by `scripts/deploy-audit-portal.sh` with `manifests/41-audit-portal.yaml` |
 | `recordings/` | Playwright scripts that record 1080p fallback videos with captions, stopwatch and fast-forward (`recordings/run.sh <script>.mjs`) |
 
 Generated and never committed: `.secrets/` (passwords, API keys, per-user kubeconfigs), `.state/` (original values for teardown), `reports/`, `recordings/out/`, `RUN-THROUGH.local.html`.
@@ -83,6 +94,7 @@ export ADMIN_PASSWORD=...              # cluster admin user (Keycloak)
 recordings/run.sh a1-deploy-from-catalog.mjs   # run scripts/a1-reset.sh first
 recordings/run.sh b1-b4-self-service-access.mjs
 recordings/run.sh c1-create-guardrail.mjs      # project aigov-c1-live must not exist
+PORTAL_URL=<portal URL> PORTAL_PASSWORD=... AUDITOR_PASSWORD=... RID=<request id> recordings/run.sh f1-audit-portal.mjs
 recordings/run.sh f1-audit-trail.mjs           # after notebooks/F1-audit-trail.ipynb has written traces
 APP_URL=<assistant URL> ASSISTANT_PASSWORD=... recordings/run.sh app-bank-assistant.mjs
 recordings/run.sh b6-chargeback.mjs           # after notebooks/B6-chargeback.ipynb; B6_START="YYYY-MM-DD hh:mm:ss" sets the dashboard range
