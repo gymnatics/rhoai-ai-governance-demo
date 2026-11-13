@@ -189,7 +189,7 @@ export async function finish(rec, name) {
     const trim = path.join(path.dirname(fileURLToPath(import.meta.url)), 'trim-blank.py');
     console.log(execFileSync('python3', [trim, mp4], { encoding: 'utf8' }).trim());
   }
-  if (!process.env.KEEP_FRAMES) fs.rmSync(path.join(outDir, 'frames'), { recursive: true, force: true });
+  if (!process.env.KEEP_FRAMES) fs.rmSync(outDir, { recursive: true, force: true });   // frames + frames.txt
   console.log(`video: ${mp4} (${frames.length} frames, real ${(end - frames[0].ts).toFixed(0)} s, played ${play(frames[0].ts, end).toFixed(0)} s)`);
   return mp4;
 }
