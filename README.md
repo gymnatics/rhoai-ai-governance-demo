@@ -1,6 +1,6 @@
 # AI governance demo for Red Hat OpenShift AI 3.5
 
-A repeatable, scripted demo of governed LLM access and AI safety on OpenShift AI, built around a fictional bank ("Acme Bank") with four application teams. It covers model deployment from the catalog, self-service API keys, per-app access control, quotas, chargeback, budget alerts, PII guardrails (with an Indonesian identifier pack), prompt-injection defence, output-leak protection and an auditor-grade trail, plus live demo runbooks and UI recording scripts.
+A repeatable, scripted demo of governed LLM access and AI safety on OpenShift AI, built around a fictional bank (default "Acme Bank", or any name you choose at setup) with four application teams. It covers model deployment from the catalog, self-service API keys, per-app access control, quotas, chargeback, budget alerts, PII guardrails (with an Indonesian identifier pack), prompt-injection defence, output-leak protection and an auditor-grade trail, plus live demo runbooks and UI recording scripts.
 
 Everything is created under the `aigov-*` / `ai-governance-demo` names, and `scripts/teardown.sh` removes it again and restores every cluster-wide setting it changed.
 
@@ -46,6 +46,17 @@ scripts/verify.sh                               # all PASS before every session
 open RUN-THROUGH.local.html                     # interactive run sheet with your cluster's URLs
 eval "$(scripts/env.sh)"                        # terminal: URLs, model IDs, demo API keys
 ```
+
+**Bank name:** the demo shows a fictional bank. Pick its name at setup, or leave it out for "Acme Bank":
+
+```bash
+scripts/setup.sh --brand "Contoso Finance" --with-workbench   # or BRAND="Contoso Finance" in config/demo.env
+```
+
+The name appears in the guardrail prompts, the bank assistant, the audit portal and the alert inbox; the bank's
+(fictional) website becomes `www.<name>.example.com` and the MaaS organization id `<name>` (lowercase, letters and
+digits only). Setup remembers it in `.state/brand`, so later scripts (`deploy-assistant.sh`, `b7-new-budget.sh`, ...)
+use the same name. To change it, run `scripts/setup.sh --brand "New name"` again.
 
 Teardown (asks for confirmation; restores telemetry, dashboard flags, gateway labels and GPU replicas from `.state/`):
 

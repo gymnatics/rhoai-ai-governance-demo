@@ -12,7 +12,7 @@ APP_TOKEN=$(oc get secret aigov-app-token -n "$DEMO_NS" -o jsonpath='{.data.toke
 FINOPS_TOKEN=$(oc get secret aigov-finops-token -n "$DEMO_NS" -o jsonpath='{.data.token}' | base64 -d)
 PROM_URL=https://$(oc get route thanos-querier -n openshift-monitoring -o jsonpath='{.spec.host}')
 oc create secret generic aigov-demo-env -n "$DEMO_NS" \
-  --from-literal=NEMO_URL="$NEMO_URL" --from-literal=NEMO_TOKEN="$APP_TOKEN" --from-literal=NEMO_MODEL="$MODEL_ID" \
+  --from-literal=BRAND="$BRAND" --from-literal=NEMO_URL="$NEMO_URL" --from-literal=NEMO_TOKEN="$APP_TOKEN" --from-literal=NEMO_MODEL="$MODEL_ID" \
   --from-literal=MAAS_URL="$MAAS_URL" --from-literal=MODEL_ID="$MODEL_ID" --from-literal=SMALL_MODEL_ID="$SMALL_MODEL_ID" \
   --from-literal=KEY_CHATBOT="$APP_CHATBOT_KEY" --from-literal=KEY_IDOCR="$APP_IDOCR_KEY" \
   --from-literal=KEY_COLLECTIONS="$APP_COLLECTIONS_KEY" --from-literal=KEY_MARKETING="$APP_MARKETING_KEY" \

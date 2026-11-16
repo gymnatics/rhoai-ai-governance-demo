@@ -11,7 +11,12 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 : "${MAAS_NS:=models-as-a-service}"          # MaaS tenant namespace (subscriptions, auth policies)
 : "${MONITORING_NS:=redhat-ods-monitoring}"  # DSCI monitoring namespace (OTel collector, LokiStack)
 : "${PART_OF:=ai-governance-demo}"           # label app.kubernetes.io/part-of on everything we create
+# Bank name shown in the demo (guardrail prompts, apps, alert inbox, portal). Precedence: BRAND env or
+# setup.sh --brand > config/demo.env > the name remembered by the last setup (.state/brand) > "Acme Bank".
+if [ -z "${BRAND:-}" ] && [ -f "$REPO_DIR/.state/brand" ]; then BRAND=$(cat "$REPO_DIR/.state/brand"); fi
 : "${BRAND:=Acme Bank}"
+case "$BRAND" in *[\'\"\\\$\`]*) echo "BRAND may not contain quotes, backslashes, \$ or backticks: $BRAND" >&2; exit 1;; esac
+BRAND_SLUG=$(printf '%s' "$BRAND" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9'); : "${BRAND_SLUG:=bank}"   # e.g. acmebank
 SECRETS_DIR="$REPO_DIR/.secrets"; STATE_DIR="$REPO_DIR/.state"
 mkdir -p "$SECRETS_DIR/kube" "$STATE_DIR"; chmod 700 "$SECRETS_DIR" "$SECRETS_DIR/kube" "$STATE_DIR"
 
@@ -45,11 +50,11 @@ fi
 : "${MODEL_SERVED_NAME:=RedHatAI/Qwen3-8B-FP8-dynamic}"
 MODEL_ID="publishers/${MODEL_NS}/models/${MODEL_SERVED_NAME}"
 SMALL_MODEL_ID="publishers/${MODEL_NS}/models/facebook/opt-125m"
-export DEMO_NS MODEL_NS MAAS_NS MONITORING_NS PART_OF BRAND API_URL CLUSTER_DOMAIN CONSOLE_URL MAAS_URL DASH_URL \
+export DEMO_NS MODEL_NS MAAS_NS MONITORING_NS PART_OF BRAND BRAND_SLUG API_URL CLUSTER_DOMAIN CONSOLE_URL MAAS_URL DASH_URL \
        NEMO_URL RECEIVER_URL KEYCLOAK_URL LLM_TEMPLATE MODEL_URI MODEL_SERVED_NAME MODEL_ID SMALL_MODEL_ID SECRETS_DIR STATE_DIR REPO_DIR
 
 # Variables substituted into manifests (explicit list: Colang/YAML `$user_message` etc. must stay untouched)
-RENDER_VARS='${DEMO_NS} ${MODEL_NS} ${MAAS_NS} ${MONITORING_NS} ${PART_OF} ${BRAND} ${MAAS_URL} ${CLUSTER_DOMAIN} ${LLM_TEMPLATE} ${MODEL_URI} ${MODEL_SERVED_NAME} ${MODEL_ID} ${SMALL_MODEL_ID}'
+RENDER_VARS='${DEMO_NS} ${MODEL_NS} ${MAAS_NS} ${MONITORING_NS} ${PART_OF} ${BRAND} ${BRAND_SLUG} ${MAAS_URL} ${CLUSTER_DOMAIN} ${LLM_TEMPLATE} ${MODEL_URI} ${MODEL_SERVED_NAME} ${MODEL_ID} ${SMALL_MODEL_ID}'
 render() { envsubst "$RENDER_VARS" < "$1"; }                 # render <manifest>  -> stdout
 apply_manifest() { render "$1" | oc apply -f - ; }            # apply_manifest <manifest>
 

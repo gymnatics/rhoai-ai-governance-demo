@@ -15,7 +15,7 @@ import os
 
 # Substitute only the demo template variables (same explicit list as scripts/lib.sh RENDER_VARS) before parsing;
 # Colang variables such as $user_message must stay untouched.
-VARS = ["DEMO_NS", "MODEL_NS", "MAAS_NS", "MONITORING_NS", "PART_OF", "BRAND", "MAAS_URL", "CLUSTER_DOMAIN",
+VARS = ["DEMO_NS", "MODEL_NS", "MAAS_NS", "MONITORING_NS", "PART_OF", "BRAND", "BRAND_SLUG", "MAAS_URL", "CLUSTER_DOMAIN",
         "LLM_TEMPLATE", "MODEL_URI", "MODEL_SERVED_NAME", "MODEL_ID", "SMALL_MODEL_ID"]
 
 

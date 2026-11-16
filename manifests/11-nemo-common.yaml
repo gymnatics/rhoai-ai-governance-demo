@@ -1,4 +1,4 @@
-# Shared NeMo Guardrails logic for all Acme Bank configs (mounted into every nemoConfig).
+# Shared NeMo Guardrails logic for all ${BRAND} configs (mounted into every nemoConfig).
 #  - actions.py : Indonesian identifier detection/masking (custom Python actions, documented GA pattern,
 #                 "Adding custom rails with Python actions", RHOAI 3.5 guardrails guide 1.2.3).
 #                 Logs a structured JSON event per detection WITHOUT raw values (C11 / F1).
@@ -107,7 +107,7 @@ data:
 
 
     # ---- person names: Presidio PERSON (bundled with NeMo) + acronym stoplist + span expansion + context rules ----
-    _STOP_UPPER = {"ACME", "KTP", "NIK", "NPWP", "OTP", "PIN", "OJK", "ATM", "KYC", "IDR", "SMS", "BI", "LPS",
+    _STOP_UPPER = {w.upper() for w in "${BRAND}".split()} | {"ACME", "KTP", "NIK", "NPWP", "OTP", "PIN", "OJK", "ATM", "KYC", "IDR", "SMS", "BI", "LPS",
                    "CS", "QRIS", "BPJS", "SIM", "KK", "API", "URL", "AI", "PDF", "USD", "RT", "RW", "DOB", "ID"}
     _STOP_WORDS = {"my", "please", "transfer", "dear", "hello", "hi", "thanks", "thank", "the", "a", "an", "i", "is", "and",
                    "bank", "branch", "savings", "account", "jalan", "jl", "monday", "tuesday", "wednesday", "thursday",
@@ -208,7 +208,7 @@ data:
 
 
     # The bank's own public contact details are bank information, not personal data: never mask or block them.
-    _PUBLIC_VALUES = ("1500 999", "1500-999", "1500999", "www.acmebank.example.com", "acmebank.example.com")
+    _PUBLIC_VALUES = ("1500 999", "1500-999", "1500999", "www.${BRAND_SLUG}.example.com", "${BRAND_SLUG}.example.com")
 
     def find_identifiers(text: str, allow: str = ""):
         """Return list of (start, end, type) for Indonesian identifiers / contextual PII."""

@@ -32,8 +32,8 @@ items:
         instructions:
           - type: general
             content: |
-              You are the Acme Bank customer assistant. Answer banking questions helpfully and concisely.
-              Acme Bank public contact details (bank information, not customer data): customer service hotline 1500 999 (24 hours), website www.acmebank.example.com. When the customer needs to contact the bank, give exactly these details.
+              You are the ${BRAND} customer assistant. Answer banking questions helpfully and concisely.
+              ${BRAND} public contact details (bank information, not customer data): customer service hotline 1500 999 (24 hours), website www.${BRAND_SLUG}.example.com. When the customer needs to contact the bank, give exactly these details.
               Placeholders such as [NIK], [PHONE], [EMAIL] or [ADDRESS] appear only where the customer's own data was removed for privacy; never ask the customer to repeat it, and never write placeholders yourself.
         tracing:
           enabled: true
@@ -75,8 +75,8 @@ items:
         instructions:
           - type: general
             content: |
-              You are the Acme Bank ID-card OCR post-processing assistant. You may process national ID numbers (NIK) to validate and format KTP data.
-              Acme Bank public contact details: hotline 1500 999, website www.acmebank.example.com. Never write placeholders yourself.
+              You are the ${BRAND} ID-card OCR post-processing assistant. You may process national ID numbers (NIK) to validate and format KTP data.
+              ${BRAND} public contact details: hotline 1500 999, website www.${BRAND_SLUG}.example.com. Never write placeholders yourself.
         tracing:
           enabled: true
           span_format: opentelemetry

@@ -13,7 +13,7 @@ metadata: {name: $SUB, namespace: $MAAS_NS, labels: {app.kubernetes.io/part-of: 
 spec:
   owner: {groups: [{name: aigov-collections}]}
   priority: 15
-  tokenMetadata: {costCenter: cc-collections, organizationId: acme, labels: {app: collections}}
+  tokenMetadata: {costCenter: cc-collections, organizationId: $BRAND_SLUG, labels: {app: collections}}
   modelRefs:
     - {name: aigov-qwen3-8b, namespace: $MODEL_NS, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 20000, window: 1h}]}
 EOF

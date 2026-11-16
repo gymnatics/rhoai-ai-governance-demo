@@ -41,7 +41,7 @@ metadata: {name: aigov-chatbot, namespace: ${MAAS_NS}, labels: {app.kubernetes.i
 spec:
   owner: {groups: [{name: aigov-chatbot}]}
   priority: 20
-  tokenMetadata: {costCenter: cc-digital-chatbot, organizationId: acme, labels: {app: chatbot}}
+  tokenMetadata: {costCenter: cc-digital-chatbot, organizationId: ${BRAND_SLUG}, labels: {app: chatbot}}
   modelRefs:
     - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 100000, window: 1m}]}
 ---
@@ -51,7 +51,7 @@ metadata: {name: aigov-idocr, namespace: ${MAAS_NS}, labels: {app.kubernetes.io/
 spec:
   owner: {groups: [{name: aigov-idocr}]}
   priority: 20
-  tokenMetadata: {costCenter: cc-ops-idocr, organizationId: acme, labels: {app: id-ocr}}
+  tokenMetadata: {costCenter: cc-ops-idocr, organizationId: ${BRAND_SLUG}, labels: {app: id-ocr}}
   modelRefs:
     - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 200000, window: 1m}]}
     - {name: aigov-small, namespace: ${MODEL_NS}, billingRate: {perToken: "0.05"}, tokenRateLimits: [{limit: 200000, window: 1m}]}
@@ -62,7 +62,7 @@ metadata: {name: aigov-collections, namespace: ${MAAS_NS}, labels: {app.kubernet
 spec:
   owner: {groups: [{name: aigov-collections}]}
   priority: 20
-  tokenMetadata: {costCenter: cc-collections, organizationId: acme, labels: {app: collections}}
+  tokenMetadata: {costCenter: cc-collections, organizationId: ${BRAND_SLUG}, labels: {app: collections}}
   modelRefs:
     - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 20000, window: 1h}]}
 ---
@@ -72,6 +72,6 @@ metadata: {name: aigov-marketing, namespace: ${MAAS_NS}, labels: {app.kubernetes
 spec:
   owner: {groups: [{name: aigov-marketing}]}
   priority: 20
-  tokenMetadata: {costCenter: cc-marketing, organizationId: acme, labels: {app: marketing}}
+  tokenMetadata: {costCenter: cc-marketing, organizationId: ${BRAND_SLUG}, labels: {app: marketing}}
   modelRefs:
     - {name: aigov-qwen3-8b, namespace: ${MODEL_NS}, billingRate: {perToken: "0.25"}, tokenRateLimits: [{limit: 200000, window: 1m}]}

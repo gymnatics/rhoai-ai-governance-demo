@@ -72,7 +72,7 @@ const url = oc('get', 'llminferenceservice', RES, '-n', NS, '-o', 'jsonpath={.st
 const sa = oc('get', 'sa', '-n', NS, '-o', 'name').split('\n').map((s) => s.replace('serviceaccount/', ''))
   .find((s) => s.includes(RES) || s.includes('default-name')) || 'default';
 const token = oc('create', 'token', sa, '-n', NS, '--duration=1h');
-const body = { model: RES, max_tokens: 200, chat_template_kwargs: { enable_thinking: false }, messages: [{ role: 'user', content: 'In one sentence, what is Acme Bank?' }] };
+const body = { model: RES, max_tokens: 200, chat_template_kwargs: { enable_thinking: false }, messages: [{ role: 'user', content: `In one sentence, what is ${process.env.BRAND || 'Acme Bank'}?` }] };
 const res = await fetch(`${url}/v1/chat/completions`, {
   method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
 });
@@ -86,7 +86,7 @@ await page.setContent(`<html><body style="font-family:'Red Hat Text',Arial;margi
   <p><b>Without token:</b> HTTP ${unauth} &nbsp;·&nbsp; <b>With generated token:</b> HTTP ${res.status}</p>
   <pre style="background:#151515;color:#9ee09e;padding:20px;border-radius:8px;white-space:pre-wrap;font-size:18px">$ curl -H "Authorization: Bearer $TOKEN" ${url}/v1/chat/completions \\
   -d '{"model":"${RES}","chat_template_kwargs":{"enable_thinking":false},
-       "messages":[{"role":"user","content":"In one sentence, what is Acme Bank?"}]}'
+       "messages":[{"role":"user","content":"In one sentence, what is ${process.env.BRAND || 'Acme Bank'}?"}]}'
 
 ${answer.replace(/</g, '&lt;')}</pre>
   <table style="font-size:20px;border-collapse:collapse" cellpadding="8">

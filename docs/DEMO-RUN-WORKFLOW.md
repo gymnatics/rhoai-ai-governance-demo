@@ -11,7 +11,7 @@ Validated on RHOAI 3.5.2. Set up the demo with `scripts/setup.sh`; open a termin
 | Role | Does |
 |---|---|
 | **Driver** | Clicks and types. Keeps the run sheet open on a second screen |
-| **Narrator** | Talks to the measures in the Acme Bank sheet ("what we measure"), calls out numbers and tiers (GA/TP) |
+| **Narrator** | Talks to the measures in the customer's requirements sheet ("what we measure"), calls out numbers and tiers (GA/TP) |
 | **Back-office** (optional) | Watches the terminal and `oc` in the background, starts the fallback video if the driver signals |
 
 Agree on a hand signal for "switch to fallback".
@@ -76,7 +76,7 @@ A1 starts first because the model takes about 3.5 minutes to come up. B1/B4 fill
   SA=$(oc get sa -n aigov-a1-live -o name | grep -v -E '/(builder|default|deployer|kserve-metrics-reader-sa)$' | head -1 | cut -d/ -f2)
   TOK=$(oc create token "$SA" -n aigov-a1-live --duration=1h)      # the token ServiceAccount the wizard created
   curl -s $URL/v1/chat/completions -H "Authorization: Bearer $TOK" -H 'Content-Type: application/json' \
-    -d '{"model":"redhataiqwen3-8b-fp8-dynamic","chat_template_kwargs":{"enable_thinking":false},"messages":[{"role":"user","content":"In one sentence, what is Acme Bank?"}]}'
+    -d '{"model":"redhataiqwen3-8b-fp8-dynamic","chat_template_kwargs":{"enable_thinking":false},"messages":[{"role":"user","content":"In one sentence, what does a retail bank do?"}]}'
   ```
 - **Say:** "One console, no YAML, validated model with provenance. Rehearsed: Ready **209–220 s**, first answer **216–227 s**. Without a token the endpoint returns 401."
 - **Fallback triggers:** an error toast on Deploy; no GPU free; Ready not reached by **6 min**. → play A1 video (the stopwatch in it shows real time).

@@ -34,10 +34,10 @@ data:
                     f"<tr class='{html.escape(str(e['severity']))} {html.escape(str(e['status']))}'><td>{html.escape(e['received'])}</td>"
                     f"<td>{html.escape(str(e['status']))}</td><td>{html.escape(str(e['alert']))}</td><td>{html.escape(str(e['team']))}</td>"
                     f"<td>{html.escape(str(e['severity']))}</td><td>{html.escape(e['summary'])}</td></tr>" for e in events)
-                out = ("<html><head><meta http-equiv='refresh' content='5'><title>Acme Bank budget alerts</title><style>"
+                out = ("<html><head><meta http-equiv='refresh' content='5'><title>${BRAND} budget alerts</title><style>"
                        "body{font-family:sans-serif;margin:2em}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px}"
                        ".warning{background:#fff4d6}.critical{background:#ffd6d6}.resolved{background:#e6ffe6}</style></head><body>"
-                       "<h2>Acme Bank AI platform: team budget alerts</h2><p>Alertmanager webhook receiver (auto-refresh 5s)" + (f" · team: {html.escape(team)}" if team else "") + "</p>"
+                       "<h2>${BRAND} AI platform: team budget alerts</h2><p>Alertmanager webhook receiver (auto-refresh 5s)" + (f" · team: {html.escape(team)}" if team else "") + "</p>"
                        "<table><tr><th>Received</th><th>Status</th><th>Alert</th><th>Team</th><th>Severity</th><th>Summary</th></tr>"
                        + (rows or "<tr><td colspan=6>No alerts yet</td></tr>") + "</table></body></html>").encode()
                 ctype = "text/html"

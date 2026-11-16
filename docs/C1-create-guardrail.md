@@ -70,6 +70,6 @@ done
 ```
 
 ## Notes
-- **Attach to a model:** add a `models:` block (main model = MaaS endpoint plus an API key Secret via `spec.env`) to also use `/v1/chat/completions`. The production Acme Bank configuration (`aigov-guardrails`) already does this, with masking and Indonesian identifiers.
+- **Attach to a model:** add a `models:` block (main model = MaaS endpoint plus an API key Secret via `spec.env`) to also use `/v1/chat/completions`. The demo's production configuration (`aigov-guardrails`) already does this, with masking and Indonesian identifiers.
 - **Gotchas found in the PoC:** `enable-auth` must be set at creation; keep all files in **one** ConfigMap per config (multiple ConfigMaps fail on 3.5.2); `oc get nemoguardrails` may resolve to the NVIDIA CRD, so use `nemoguardrails.trustyai.opendatahub.io`.
 - **Cleanup:** `oc delete project aigov-c1-live`.

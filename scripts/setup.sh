@@ -4,14 +4,17 @@
 # user-workload monitoring with user alert routing, Keycloak (RHBK) as the OpenShift IdP, >=1 free NVIDIA GPU.
 # Every cluster-wide setting we change is recorded in .state/ so scripts/teardown.sh can restore it.
 #
-# Usage: scripts/setup.sh [--gpu-nodes N] [--with-loki] [--with-workbench] [--with-assistant] [--with-audit-portal] [--no-wait] [--skip-users]
+# Usage: scripts/setup.sh [--brand "Bank name"] [--gpu-nodes N] [--with-loki] [--with-workbench] [--with-assistant] [--with-audit-portal] [--no-wait] [--skip-users]
+# --brand is read before lib.sh, which derives the website/organization id from it
+args=("$@"); for i in "${!args[@]}"; do [ "${args[$i]}" = "--brand" ] && export BRAND="${args[$((i+1))]:-}"; done
 source "$(dirname "$0")/lib.sh"
 GPU_NODES=""; WITH_LOKI=false; WITH_WB=false; WITH_APP=false; WITH_PORTAL=false; WAIT=true; USERS=true
 while [ $# -gt 0 ]; do case "$1" in
-  --gpu-nodes) GPU_NODES=$2; shift 2;; --with-loki) WITH_LOKI=true; shift;; --with-workbench) WITH_WB=true; shift;; --with-assistant) WITH_APP=true; shift;; --with-audit-portal) WITH_PORTAL=true; shift;;
+  --brand) shift 2;; --gpu-nodes) GPU_NODES=$2; shift 2;; --with-loki) WITH_LOKI=true; shift;; --with-workbench) WITH_WB=true; shift;; --with-assistant) WITH_APP=true; shift;; --with-audit-portal) WITH_PORTAL=true; shift;;
   --no-wait) WAIT=false; shift;; --skip-users) USERS=false; shift;; -h|--help) sed -n '2,8p' "$0"; exit 0;;
   *) die "unknown option $1";; esac; done
 S="$STATE_DIR/setup-state.env"; touch "$S"
+printf '%s' "$BRAND" > "$STATE_DIR/brand"; log "bank name: $BRAND (website www.$BRAND_SLUG.example.com)"
 remember() { grep -q "^$1=" "$S" 2>/dev/null || echo "$1='$2'" >> "$S"; }   # first value wins (= original)
 
 log "preflight on $API_URL"
