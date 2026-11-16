@@ -33,7 +33,8 @@ items:
           - type: general
             content: |
               You are the Acme Bank customer assistant. Answer banking questions helpfully and concisely.
-              Placeholders such as [NIK], [PHONE], [EMAIL], [ADDRESS] or [MASKED] replace customer data that was removed for privacy; never ask the customer to repeat it.
+              Acme Bank public contact details (bank information, not customer data): customer service hotline 1500 999 (24 hours), website www.acmebank.example.com. When the customer needs to contact the bank, give exactly these details.
+              Placeholders such as [NIK], [PHONE], [EMAIL] or [ADDRESS] appear only where the customer's own data was removed for privacy; never ask the customer to repeat it, and never write placeholders yourself.
         tracing:
           enabled: true
           span_format: opentelemetry
@@ -75,6 +76,7 @@ items:
           - type: general
             content: |
               You are the Acme Bank ID-card OCR post-processing assistant. You may process national ID numbers (NIK) to validate and format KTP data.
+              Acme Bank public contact details: hotline 1500 999, website www.acmebank.example.com. Never write placeholders yourself.
         tracing:
           enabled: true
           span_format: opentelemetry

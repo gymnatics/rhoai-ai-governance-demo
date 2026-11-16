@@ -207,13 +207,19 @@ data:
         return out
 
 
+    # The bank's own public contact details are bank information, not personal data: never mask or block them.
+    _PUBLIC_VALUES = ("1500 999", "1500-999", "1500999", "www.acmebank.example.com", "acmebank.example.com")
+
     def find_identifiers(text: str, allow: str = ""):
         """Return list of (start, end, type) for Indonesian identifiers / contextual PII."""
         allowed = {a.strip() for a in (allow or "").split(",") if a.strip()}
         spans = []
+        public = [(m.start(), m.end()) for v in _PUBLIC_VALUES for m in re.finditer(re.escape(v), text, re.I)]
 
         def add(s, e, t):
             if t in allowed:
+                return
+            if any(not (e <= ps or s >= pe) for ps, pe in public):
                 return
             if any(not (e <= s2 or s >= e2) for s2, e2, _ in spans):
                 return
