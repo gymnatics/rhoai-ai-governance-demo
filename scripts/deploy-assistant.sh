@@ -15,6 +15,10 @@ if [ ! -f "$SECRETS_DIR/assistant.env" ]; then
   (umask 077; printf 'ASSISTANT_USER=demo\nASSISTANT_PASSWORD=%s\nCHAINLIT_AUTH_SECRET=%s\n' "$(openssl rand -hex 8)" "$(openssl rand -hex 32)" > "$SECRETS_DIR/assistant.env")
 fi
 set -a; source "$SECRETS_DIR/assistant.env"; set +a
+if [ -z "${CHAINLIT_AUTH_SECRET:-}" ]; then   # keep the session key already on the cluster, else create one
+  CHAINLIT_AUTH_SECRET=$(oc get secret aigov-assistant-env -n "$DEMO_NS" -o jsonpath='{.data.CHAINLIT_AUTH_SECRET}' 2>/dev/null | base64 -d)
+  [ -n "$CHAINLIT_AUTH_SECRET" ] || CHAINLIT_AUTH_SECRET=$(openssl rand -hex 32)
+fi
 
 log "secret aigov-assistant-env"
 for i in $(seq 1 20); do [ -n "$(oc get secret aigov-app-token -n "$DEMO_NS" -o jsonpath='{.data.token}' 2>/dev/null)" ] && break; sleep 2; done
