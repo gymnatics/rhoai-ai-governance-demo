@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Build and deploy the bank assistant (Chainlit sample app) into $DEMO_NS.
 # Needs the guardrails and the aigov-app ServiceAccount from scripts/setup.sh.
-# Usage: scripts/deploy-assistant.sh [--no-build]
-#   --no-build   only refresh the Secret and manifests (reuse the last image)
+# Usage: scripts/deploy-assistant.sh [--no-build | --rebuild]
+#   Idempotent: builds only when app/ or the audit client changed, restarts only when the image or Secret changed.
+#   --no-build   never build (reuse the last image)    --rebuild   build even if nothing changed
 # Login for the app: user "demo", password in .secrets/assistant.env (generated on first run).
 source "$(dirname "$0")/lib.sh"; load_secrets
-BUILD=true; [ "${1:-}" = "--no-build" ] && BUILD=false
+BUILD=true; FORCE=false
+for a in "$@"; do case "$a" in --no-build) BUILD=false;; --rebuild) FORCE=true;; *) echo "unknown option $a (use --no-build or --rebuild)" >&2; exit 1;; esac; done
 
 oc get sa aigov-app -n "$DEMO_NS" >/dev/null 2>&1 || die "ServiceAccount aigov-app not found in $DEMO_NS (run scripts/setup.sh first)"
 
@@ -38,12 +40,12 @@ apply_manifest "$REPO_DIR/manifests/42-audit-otel-collector.yaml" >/dev/null || 
 apply_manifest "$REPO_DIR/manifests/40-assistant.yaml" >/dev/null
 
 if $BUILD; then
-  log "build (in-cluster, ~3-5 min)"
+  log "image"
   CTX=$(mktemp -d); trap 'rm -rf "$CTX"' EXIT
   cp "$REPO_DIR"/app/{app.py,chainlit.md,requirements.txt,Containerfile} "$CTX/"
   cp "$REPO_DIR"/notebooks/{harness.py,audit_client.py} "$CTX/"
-  oc start-build aigov-assistant -n "$DEMO_NS" --from-dir="$CTX" --follow --wait >/dev/null || die "build failed: oc logs -n $DEMO_NS bc/aigov-assistant"
+  build_if_changed aigov-assistant "$DEMO_NS" "$CTX" $FORCE || die "build failed: oc logs -n $DEMO_NS bc/aigov-assistant"
 fi
-oc rollout restart deploy/aigov-assistant -n "$DEMO_NS" >/dev/null
+roll_if_config_changed aigov-assistant "$DEMO_NS" aigov-assistant-env
 oc rollout status deploy/aigov-assistant -n "$DEMO_NS" --timeout=300s >/dev/null || die "assistant not ready: oc logs -n $DEMO_NS deploy/aigov-assistant"
 ok "assistant: https://$(oc get route aigov-assistant -n "$DEMO_NS" -o jsonpath='{.spec.host}')  (user $ASSISTANT_USER, password in $SECRETS_DIR/assistant.env)"

@@ -56,3 +56,32 @@ apply_manifest() { render "$1" | oc apply -f - ; }            # apply_manifest <
 load_secrets() { [ -f "$SECRETS_DIR/api-keys.env" ] && { set -a; source "$SECRETS_DIR/api-keys.env"; set +a; }; [ -f "$SECRETS_DIR/app-users.env" ] && { set -a; source "$SECRETS_DIR/app-users.env"; set +a; }; return 0; }
 user_token() { KUBECONFIG="$SECRETS_DIR/kube/$1" oc whoami -t; }   # token of a demo app user (after create-users.sh)
 APP_USERS="aigov-app-chatbot aigov-app-idocr aigov-app-collections aigov-app-marketing aigov-app-unauth aigov-auditor1"
+
+# --- idempotent deploy helpers -------------------------------------------------------------------------------
+# build_if_changed <buildconfig> <namespace> <context-dir> <force:true|false>
+#   Builds only when the build inputs changed (fingerprint stored on the BuildConfig) or no image exists yet.
+build_if_changed() {
+  local bc=$1 ns=$2 ctx=$3 force=${4:-false} h cur
+  h=$(cd "$ctx" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 | shasum -a 256 | cut -c1-16)
+  cur=$(oc get bc "$bc" -n "$ns" -o jsonpath="{.metadata.annotations.ai-governance-demo/source-hash}" 2>/dev/null || true)
+  if [ "$force" != true ] && [ "$h" = "$cur" ] && oc get istag "$bc:latest" -n "$ns" >/dev/null 2>&1; then
+    echo "  image up to date (source $h): build skipped"; return 0
+  fi
+  echo "  building image (source $h, ~3-5 min)"
+  oc start-build "$bc" -n "$ns" --from-dir="$ctx" --follow --wait >/dev/null || return 1
+  oc annotate bc "$bc" -n "$ns" ai-governance-demo/source-hash="$h" --overwrite >/dev/null
+}
+# roll_if_config_changed <deployment> <namespace> <secret>
+#   Rolls the Deployment out once when its Secret changed (fingerprint on the pod template); otherwise leaves it alone.
+#   A new image rolls out by itself through the ImageStream trigger.
+roll_if_config_changed() {
+  local d=$1 ns=$2 s=$3 h cur
+  h=$(oc get secret "$s" -n "$ns" -o jsonpath="{.data}" | shasum -a 256 | cut -c1-16)
+  cur=$(oc get deploy "$d" -n "$ns" -o jsonpath="{.spec.template.metadata.annotations.ai-governance-demo/config-hash}" 2>/dev/null || true)
+  if [ "$h" != "$cur" ]; then
+    oc patch deploy "$d" -n "$ns" --type merge -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"ai-governance-demo/config-hash\":\"$h\"}}}}}" >/dev/null
+    echo "  configuration changed: rolling out"
+  else
+    echo "  configuration unchanged: no restart"
+  fi
+}
